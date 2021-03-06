@@ -1,26 +1,23 @@
-import React from 'react';
-import logo from './logo.svg';
+import { useState } from 'react';
+import ArrayVisualizer from './components/ArrayVisualizer';
 import './App.css';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [maxItems, setMaxItems] = useState(0);
+
+    const handleMaxValue = (max: number): void => {
+        if(max !== maxItems) {
+            setMaxItems(max);
+        }
+    }
+
+    const randList = [...Array(maxItems)].map(() => Math.floor(Math.random() * 100 + 1));
+
+    return (
+        <div className="App">
+            <ArrayVisualizer list={randList} handleMaxValue={handleMaxValue} />
+        </div>
+    );
 }
 
 export default App;
