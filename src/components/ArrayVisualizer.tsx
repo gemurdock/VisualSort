@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react';
+import { CSSProperties, useEffect } from 'react';
 import './ArrayVisualizer.css';
 
 const WIDTH = 800;
@@ -22,11 +22,14 @@ function buildSVGRects(items: {value: number, x: number, y: number}[]): JSX.Elem
         items[i].value = (items[i].value - min) / (max - min); // normalize
         items[i].value = items[i].value * MAX_HEIGHT + 3; // scale to view, add min height
     }
-    return items.map(item => <rect key={item.value} x={item.x} y={item.y - item.value} height={`${item.value}px`} style={defaultRectStyle} />);
+    return items.map(item => <rect key={`${item.value}-${item.x}-${item.y}`} x={item.x} y={item.y - item.value} height={`${item.value}px`} style={defaultRectStyle} />);
 }
 
 function ArrayVisualizer(props: { list: number[], handleMaxValue: (max: number) => void}) {
-    props.handleMaxValue(MAX_ITEMS);
+    useEffect(() => {
+        props.handleMaxValue(MAX_ITEMS);
+    }, [props]);
+
     let rects = buildSVGRects(props.list.map(v => ({ value: v, x: 0, y: Math.floor(HEIGHT * 0.98) })));
     return (
         <div className="visualizer-container">
