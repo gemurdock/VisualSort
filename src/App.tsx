@@ -1,7 +1,14 @@
 import React from 'react';
+import { Container, Row, Col, Button } from 'react-bootstrap';
 import ArrayVisualizer from './components/ArrayVisualizer';
 import './App.css';
 import BubbleSort, { BubbleSortState } from './sorters/BubbleSort';
+
+enum AlgorithmState {
+    PAUSED,
+    RUNNING,
+    RESET
+}
 
 interface AppProps {
 
@@ -11,7 +18,9 @@ interface AppState {
     maxItems: number;
     intervalCall: NodeJS.Timeout | null;
     values: number[];
-    state: BubbleSortState
+    swapCount: number;
+    internalSortState: BubbleSortState;
+    applicationState: AlgorithmState
 };
 
 class App extends React.Component<AppProps, AppState> {
@@ -21,7 +30,9 @@ class App extends React.Component<AppProps, AppState> {
             maxItems: 0,
             intervalCall: null,
             values: [],
-            state: {index: 0, completedIndex: -1, isDone: false}
+            swapCount: 0,
+            applicationState: AlgorithmState.PAUSED,
+            internalSortState: {index: 0, completedIndex: -1, isDone: false}
         };
     }
 
@@ -42,8 +53,25 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     nextSortState() {
-        let result = BubbleSort(this.state.values, this.state.state);
-        this.setState({...this.state, values: result[0], state: result[1]});
+        if(this.state.applicationState === AlgorithmState.RUNNING) {
+            let result = BubbleSort(this.state.values, this.state.internalSortState);
+            if(result[1].isDone === true) {
+                this.setState({...this.state, applicationState: AlgorithmState.PAUSED});
+            }
+            this.setState({...this.state, values: result[0], internalSortState: result[1], swapCount: this.state.swapCount + 1});
+        } else if(this.state.applicationState === AlgorithmState.RESET) {
+            this.setState({
+                ...this.state,
+                values: [...Array(this.state.maxItems)].map(() => Math.floor(Math.random() * 100 + 1)),
+                swapCount: 0,
+                internalSortState: {index: 0, completedIndex: -1, isDone: false},
+                applicationState: AlgorithmState.PAUSED
+            });
+        }
+    }
+
+    setAppState(state: AlgorithmState) {
+        this.setState({...this.state, applicationState: state});
     }
 
     handleMaxValue = (max: number): void => {
@@ -59,7 +87,31 @@ class App extends React.Component<AppProps, AppState> {
     render() {
         return (
             <div className="App">
-                <ArrayVisualizer list={this.state.values} handleMaxValue={this.handleMaxValue} />
+                <Container>
+                    <Row>
+                        <Col>
+                            <Row>
+                                <Col>
+                                    <Button variant="primary" onClick={() => this.setAppState(AlgorithmState.RUNNING)}>Start</Button>
+                                </Col>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.setAppState(AlgorithmState.PAUSED)}>Stop</Button>
+                                </Col>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.setAppState(AlgorithmState.RESET)}>Reset</Button>
+                                </Col>
+                            </Row>
+                        </Col>
+                        <Col>
+                            <p>Comparisons: {this.state.swapCount}</p>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col>
+                            <ArrayVisualizer list={this.state.values} handleMaxValue={this.handleMaxValue} />
+                        </Col>
+                    </Row>
+                </Container>
             </div>
         )
     };

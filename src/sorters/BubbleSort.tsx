@@ -11,7 +11,6 @@ export interface BubbleSortState {
 }
 
 function BubbleSort(input: number[], state: BubbleSortState): [number[], BubbleSortState] {
-    console.log(`Bubble Sort Input: ${input} // ${JSON.stringify(state)}`);
     let nextInput = [...input];
 
     let nextState = null;
