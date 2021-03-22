@@ -1,39 +1,88 @@
-import { CSSProperties, useEffect } from 'react';
+import { CSSProperties, useEffect, useState } from 'react';
 import './ArrayVisualizer.css';
 
-const WIDTH = 800;
-const HEIGHT = 500;
-const RECT_WIDTH = 5;
-const RECT_PADDING = RECT_WIDTH / 2;
-const MAX_HEIGHT = Math.floor(HEIGHT * 0.9);
-const MAX_ITEMS = Math.floor((WIDTH / (RECT_WIDTH + RECT_PADDING)) * 0.90);
-const COLUMN_WIDTH = WIDTH / (MAX_ITEMS + 1);
-
-const defaultRectStyle: CSSProperties = {
-    fill: 'rgb(66, 135, 245)',
-    width: `${RECT_WIDTH}px`
-};
-
-function buildSVGRects(items: {value: number, x: number, y: number}[]): JSX.Element[] {
-    const min = Math.min(...items.map(i => i.value));
-    const max = Math.max(...items.map(i => i.value));
-    for(let i = 0; i < items.length; i++) {
-        items[i].x = (i) * (COLUMN_WIDTH) + COLUMN_WIDTH / 2;
-        items[i].value = (items[i].value - min) / (max - min); // normalize
-        items[i].value = items[i].value * MAX_HEIGHT + 3; // scale to view, add min height
-    }
-    return items.map(item => <rect key={`${item.value}-${item.x}-${item.y}`} x={item.x} y={item.y - item.value} height={`${item.value}px`} style={defaultRectStyle} />);
+export interface ProcessedValues {
+    original: number[],
+    scaled: number[]
 }
 
-function ArrayVisualizer(props: { list: number[], handleMaxValue: (max: number) => void}) {
+interface ViewSpecs {
+    rectStartX: number;
+    rectWidth: number;
+    rectPad: number;
+    maxRectHeight: number;
+    maxItems: number; // 119 @ 1200 width
+}
+
+const VIEWBOX_WIDTH = 1200;
+const VIEWBOX_HEIGHT = 675;
+const MIN_RECT_WIDTH = 5;
+const MIN_RECT_HEIGHT = 3;
+const MIN_RECT_PAD = 2.5;
+const MIN_PAD = 1; // min for each side
+const PAD_PERCENT = 0.1;
+
+function calcView(length: number): ViewSpecs {
+    let useableWidth = VIEWBOX_WIDTH - (MIN_PAD * 2);
+    let useableHeight = VIEWBOX_HEIGHT - (MIN_PAD * 2);
+    let maxItems = Math.floor(useableWidth / (MIN_RECT_PAD * 2 + MIN_RECT_WIDTH));
+    let rectPad = Math.max(MIN_PAD * 2, (useableWidth / length) * PAD_PERCENT);
+    let rectWidth = (useableWidth - (rectPad * length)) / length;
+    let rectStartX = (rectPad / 2) + (rectWidth / 2);
+    return {
+        rectStartX,
+        rectWidth,
+        rectPad,
+        maxRectHeight: useableHeight,
+        maxItems
+    }
+}
+
+function buildSVGRects(items: ProcessedValues, viewSpecs: ViewSpecs): JSX.Element[] {
+    let defaultRectStyle: CSSProperties = {
+        fill: 'rgb(66, 135, 245)',
+        width: `${viewSpecs.rectWidth}px`
+    };
+    if(items.scaled.length !== items.original.length) {
+        const min = Math.min(...items.original);
+        const max = Math.max(...items.original);
+        let normalized = [...items.original];
+        for(let i = 0; i < normalized.length; i++) {
+            normalized[i] = (normalized[i] - min) / (max - min); // normalize
+            normalized[i] = normalized[i] * viewSpecs.maxRectHeight; // scale
+            if(normalized[i] < MIN_RECT_HEIGHT) { // ensure each item is visible
+                normalized[i] = MIN_RECT_HEIGHT; // TODO: fix min scale issue, 0 !== 1 !== 2, !== 3... ect
+            }
+        }
+        items.scaled = normalized;
+    }
+    return items.scaled.map((item, index) => {
+        return (
+            <rect key={`${index}`}
+                x={viewSpecs.rectPad / 2 + (viewSpecs.rectPad + viewSpecs.rectWidth) * index}
+                y={VIEWBOX_HEIGHT - item} height={item} style={defaultRectStyle} />
+        )
+    });
+}
+
+function ArrayVisualizer(props: { width: number, height: number, list: ProcessedValues, handleMaxItems: (max: number) => void,
+        handleMaxValue: (max: number) => void }) {
+    const [viewSpecs, setViewSpecs] = useState<ViewSpecs>(calcView(props.list.original.length));
+
     useEffect(() => {
-        props.handleMaxValue(MAX_ITEMS);
+        setViewSpecs(calcView(props.list.original.length));
     }, [props]);
 
-    let rects = buildSVGRects(props.list.map(v => ({ value: v, x: 0, y: Math.floor(HEIGHT * 0.98) })));
+    useEffect(() => {
+        props.handleMaxItems(viewSpecs.maxItems);
+        props.handleMaxValue(viewSpecs.maxRectHeight);
+    }, [viewSpecs]);
+
+    let rects = buildSVGRects(props.list, viewSpecs);
+
     return (
         <div className="visualizer-container">
-            <svg className=".svg-view" viewBox={`0 0 ${WIDTH} ${HEIGHT}`} width={`${WIDTH}`} height={`${HEIGHT}`}>
+            <svg className=".svg-view" viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} width={`${props.width}`} height={`${props.height}`}>
                 { rects }
                 Warning: Your browser does not support SVG.
             </svg>

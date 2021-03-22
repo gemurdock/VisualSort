@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Row, Col, Button } from 'react-bootstrap';
-import ArrayVisualizer from './components/ArrayVisualizer';
+import ArrayVisualizer, { ProcessedValues } from './components/ArrayVisualizer';
 import './App.css';
 import BubbleSort, { BubbleSortState } from './sorters/BubbleSort';
 
@@ -16,6 +16,7 @@ interface AppProps {
 
 interface AppState {
     maxItems: number;
+    maxHeight: number;
     intervalCall: NodeJS.Timeout | null;
     values: number[];
     swapCount: number;
@@ -28,6 +29,7 @@ class App extends React.Component<AppProps, AppState> {
         super(props);
         this.state = {
             maxItems: 0,
+            maxHeight: 0,
             intervalCall: null,
             values: [],
             swapCount: 0,
@@ -74,13 +76,22 @@ class App extends React.Component<AppProps, AppState> {
         this.setState({...this.state, applicationState: state});
     }
 
-    handleMaxValue = (max: number): void => {
+    handleMaxItems = (max: number): void => {
         if(max !== this.state.maxItems) {
             this.setState({
                 ...this.state,
                 maxItems: max,
                 values: [...Array(max)].map(() => Math.floor(Math.random() * 100 + 1))
             });
+        }
+    }
+
+    handleMaxValue = (max: number): void => {
+        if(max !== this.state.maxHeight) {
+            this.setState({
+                ...this.state,
+                maxHeight: max
+            })
         }
     }
 
@@ -108,7 +119,9 @@ class App extends React.Component<AppProps, AppState> {
                     </Row>
                     <Row>
                         <Col>
-                            <ArrayVisualizer list={this.state.values} handleMaxValue={this.handleMaxValue} />
+                            <ArrayVisualizer list={ { original: this.state.values, scaled: [] } }
+                                width={1000} height={600}
+                                handleMaxItems={this.handleMaxItems} handleMaxValue={this.handleMaxValue} />
                         </Col>
                     </Row>
                 </Container>
