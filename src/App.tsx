@@ -77,6 +77,9 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     handleMaxItems = (max: number): void => {
+        if(max > 100) { // TODO: move this to array visualizer
+            max = 100;
+        }
         if(max !== this.state.maxItems) {
             this.setState({
                 ...this.state,
@@ -99,7 +102,19 @@ class App extends React.Component<AppProps, AppState> {
         return (
             <div className="App">
                 <Container>
-                    <Row>
+                    <Row className="text-center m-3">
+                        <Col>
+                            <span className="app-text">Comparisons: {this.state.swapCount}</span>
+                        </Col>
+                    </Row>
+                    <Row className="text-center m-3">
+                        <Col>
+                            <ArrayVisualizer list={ { original: this.state.values, scaled: [] } }
+                                width={1000} height={600}
+                                handleMaxItems={this.handleMaxItems} handleMaxValue={this.handleMaxValue} />
+                        </Col>
+                    </Row>
+                    <Row className="text-center m-3">
                         <Col>
                             <Row>
                                 <Col>
@@ -112,16 +127,6 @@ class App extends React.Component<AppProps, AppState> {
                                     <Button variant="secondary" onClick={() => this.setAppState(AlgorithmState.RESET)}>Reset</Button>
                                 </Col>
                             </Row>
-                        </Col>
-                        <Col>
-                            <p>Comparisons: {this.state.swapCount}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col>
-                            <ArrayVisualizer list={ { original: this.state.values, scaled: [] } }
-                                width={1000} height={600}
-                                handleMaxItems={this.handleMaxItems} handleMaxValue={this.handleMaxValue} />
                         </Col>
                     </Row>
                 </Container>

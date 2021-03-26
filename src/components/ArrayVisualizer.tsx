@@ -81,7 +81,7 @@ function ArrayVisualizer(props: { width: number, height: number, list: Processed
     let rects = buildSVGRects(props.list, viewSpecs);
 
     return (
-        <div className="visualizer-container">
+        <div>
             <svg className=".svg-view" viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} width={`${props.width}`} height={`${props.height}`}>
                 { rects }
                 Warning: Your browser does not support SVG.
