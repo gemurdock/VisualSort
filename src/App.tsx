@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Row, Col, Button } from 'react-bootstrap';
-import ArrayVisualizer, { ProcessedValues } from './components/ArrayVisualizer';
+import ArrayVisualizer, { ProcessedValues, ArrayMetaData } from './components/ArrayVisualizer';
 import './App.css';
 import BubbleSort, { BubbleSortState } from './sorters/BubbleSort';
 
@@ -41,7 +41,7 @@ class App extends React.Component<AppProps, AppState> {
     componentDidMount() {
         let interval = setInterval(() => {
             this.nextSortState();
-        }, 10);
+        }, 20);
         this.setState({
             ...this.state,
             intervalCall: interval
@@ -99,6 +99,12 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     render() {
+        let key1 = `${this.state.internalSortState.index}`; // TODO: put metadata generation inside algorithm
+        let key2 = `${this.state.internalSortState.index + 1}`;
+        let highlightMeta: ArrayMetaData<Boolean> = {};
+        highlightMeta[key1] = true;
+        highlightMeta[key2] = true;
+
         return (
             <div className="App">
                 <Container>
@@ -110,7 +116,7 @@ class App extends React.Component<AppProps, AppState> {
                     <Row className="text-center m-3">
                         <Col>
                             <ArrayVisualizer list={ { original: this.state.values, scaled: [] } }
-                                width={1000} height={600}
+                                width={1000} height={600} highlightMeta={highlightMeta} focusMeta={{}}
                                 handleMaxItems={this.handleMaxItems} handleMaxValue={this.handleMaxValue} />
                         </Col>
                     </Row>
