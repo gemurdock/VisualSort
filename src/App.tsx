@@ -19,7 +19,10 @@ interface AppState {
     maxHeight: number;
     intervalCall: NodeJS.Timeout | null;
     values: number[];
+    comparisonsCount: number;
     swapCount: number;
+    startTime: number | null;
+    totalTime: number;
     internalSortState: BubbleSortState;
     applicationState: AlgorithmState
 };
@@ -32,14 +35,18 @@ class App extends React.Component<AppProps, AppState> {
             maxHeight: 0,
             intervalCall: null,
             values: [],
+            comparisonsCount: 0,
             swapCount: 0,
+            startTime: null,
+            totalTime: 0,
             applicationState: AlgorithmState.PAUSED,
-            internalSortState: {index: 0, completedIndex: -1, isDone: false}
+            internalSortState: {index: 0, completedIndex: -1, isDone: false, comparisons: 0, swaps: 0}
         };
     }
 
     componentDidMount() {
         let interval = setInterval(() => {
+            this.calcTime();
             this.nextSortState();
         }, 20);
         this.setState({
@@ -54,19 +61,40 @@ class App extends React.Component<AppProps, AppState> {
         }
     }
 
+    calcTime() {
+        if(this.state.applicationState === AlgorithmState.RUNNING && this.state.startTime === null) {
+            this.setState({...this.state, startTime: new Date().getTime()});
+        } else if(this.state.applicationState === AlgorithmState.PAUSED && this.state.startTime !== null) {
+            let totalTime = this.state.totalTime + (new Date().getTime() - this.state.startTime);
+            this.setState({...this.state, startTime: null, totalTime});
+        } else if(this.state.applicationState === AlgorithmState.RESET) {
+            this.setState({...this.state, startTime: null, totalTime: 0});
+        }
+    }
+
+    getTotalTime(): string {
+        let totalTime = this.state.totalTime;
+        if(this.state.startTime !== null) {
+            totalTime += new Date().getTime() - this.state.startTime;
+        }
+        totalTime = Math.floor(totalTime / 1000);
+        return `${totalTime}s`;
+    }
+
     nextSortState() {
         if(this.state.applicationState === AlgorithmState.RUNNING) {
             let result = BubbleSort(this.state.values, this.state.internalSortState);
             if(result[1].isDone === true) {
                 this.setState({...this.state, applicationState: AlgorithmState.PAUSED});
             }
-            this.setState({...this.state, values: result[0], internalSortState: result[1], swapCount: this.state.swapCount + 1});
+            this.setState({...this.state, values: result[0], internalSortState: result[1], comparisonsCount: result[1].comparisons, swapCount: result[1].swaps});
         } else if(this.state.applicationState === AlgorithmState.RESET) {
             this.setState({
                 ...this.state,
                 values: [...Array(this.state.maxItems)].map(() => Math.floor(Math.random() * 100 + 1)),
+                comparisonsCount: 0,
                 swapCount: 0,
-                internalSortState: {index: 0, completedIndex: -1, isDone: false},
+                internalSortState: {index: 0, completedIndex: -1, isDone: false, comparisons: 0, swaps: 0},
                 applicationState: AlgorithmState.PAUSED
             });
         }
@@ -110,7 +138,13 @@ class App extends React.Component<AppProps, AppState> {
                 <Container>
                     <Row className="text-center m-3">
                         <Col>
-                            <span className="app-text">Comparisons: {this.state.swapCount}</span>
+                            <span className="app-text">Comparisons: {this.state.comparisonsCount}</span>
+                        </Col>
+                        <Col>
+                            <span className="app-text">Swaps: {this.state.swapCount}</span>
+                        </Col>
+                        <Col>
+                            <span className="app-text">Time: {this.getTotalTime()}</span>
                         </Col>
                     </Row>
                     <Row className="text-center m-3">
