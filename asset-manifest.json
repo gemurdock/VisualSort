@@ -1,8 +1,8 @@
 {
   "files": {
-    "main.css": "/VisualSort/static/css/main.9ce0a294.chunk.css",
-    "main.js": "/VisualSort/static/js/main.3a7bb402.chunk.js",
-    "main.js.map": "/VisualSort/static/js/main.3a7bb402.chunk.js.map",
+    "main.css": "/VisualSort/static/css/main.02c1eed9.chunk.css",
+    "main.js": "/VisualSort/static/js/main.283d1d87.chunk.js",
+    "main.js.map": "/VisualSort/static/js/main.283d1d87.chunk.js.map",
     "runtime-main.js": "/VisualSort/static/js/runtime-main.71175a24.js",
     "runtime-main.js.map": "/VisualSort/static/js/runtime-main.71175a24.js.map",
     "static/css/2.fabbef47.chunk.css": "/VisualSort/static/css/2.fabbef47.chunk.css",
@@ -12,14 +12,14 @@
     "static/js/3.2f836f42.chunk.js.map": "/VisualSort/static/js/3.2f836f42.chunk.js.map",
     "index.html": "/VisualSort/index.html",
     "static/css/2.fabbef47.chunk.css.map": "/VisualSort/static/css/2.fabbef47.chunk.css.map",
-    "static/css/main.9ce0a294.chunk.css.map": "/VisualSort/static/css/main.9ce0a294.chunk.css.map",
+    "static/css/main.02c1eed9.chunk.css.map": "/VisualSort/static/css/main.02c1eed9.chunk.css.map",
     "static/js/2.27bc22c0.chunk.js.LICENSE.txt": "/VisualSort/static/js/2.27bc22c0.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.71175a24.js",
     "static/css/2.fabbef47.chunk.css",
     "static/js/2.27bc22c0.chunk.js",
-    "static/css/main.9ce0a294.chunk.css",
-    "static/js/main.3a7bb402.chunk.js"
+    "static/css/main.02c1eed9.chunk.css",
+    "static/js/main.283d1d87.chunk.js"
   ]
 }
