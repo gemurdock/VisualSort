@@ -3,6 +3,7 @@ import { Container, Row, Col, Button } from 'react-bootstrap';
 import ArrayVisualizer, { ProcessedValues, ArrayMetaData } from './components/ArrayVisualizer';
 import './App.css';
 import BubbleSort, { BubbleSortState } from './sorters/BubbleSort';
+import { isNumeric } from './lib/helpers';
 
 enum AlgorithmState {
     PAUSED,
@@ -16,6 +17,7 @@ interface AppProps {
 
 interface AppState {
     maxItems: number;
+    itemCount: number;
     maxHeight: number;
     intervalCall: NodeJS.Timeout | null;
     values: number[];
@@ -32,6 +34,7 @@ class App extends React.Component<AppProps, AppState> {
         super(props);
         this.state = {
             maxItems: 0,
+            itemCount: 0,
             maxHeight: 0,
             intervalCall: null,
             values: [],
@@ -91,7 +94,7 @@ class App extends React.Component<AppProps, AppState> {
         } else if(this.state.applicationState === AlgorithmState.RESET) {
             this.setState({
                 ...this.state,
-                values: [...Array(this.state.maxItems)].map(() => Math.floor(Math.random() * 100 + 1)),
+                values: [...Array(this.state.itemCount)].map(() => Math.floor(Math.random() * 100 + 1)),
                 comparisonsCount: 0,
                 swapCount: 0,
                 internalSortState: {index: 0, completedIndex: -1, isDone: false, comparisons: 0, swaps: 0},
@@ -112,6 +115,7 @@ class App extends React.Component<AppProps, AppState> {
             this.setState({
                 ...this.state,
                 maxItems: max,
+                itemCount: max,
                 values: [...Array(max)].map(() => Math.floor(Math.random() * 100 + 1))
             });
         }
@@ -123,6 +127,23 @@ class App extends React.Component<AppProps, AppState> {
                 ...this.state,
                 maxHeight: max
             })
+        }
+    }
+
+    handleItemChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        if(isNumeric(event.target.value)) {
+            let n = parseInt(event.target.value);
+            if(n >= 5 && n <= this.state.maxItems) {
+                this.setState({
+                    ...this.state,
+                    itemCount: n,
+                    applicationState: AlgorithmState.RESET
+                });
+            } else {
+                event.preventDefault();
+            }
+        } else {
+            event.preventDefault();
         }
     }
 
@@ -165,6 +186,9 @@ class App extends React.Component<AppProps, AppState> {
                                 </Col>
                                 <Col>
                                     <Button variant="secondary" onClick={() => this.setAppState(AlgorithmState.RESET)}>Reset</Button>
+                                </Col>
+                                <Col>
+                                    <input type="number" className="elements-counter" name="elements" step="5" value={this.state.itemCount} onChange={this.handleItemChange} />
                                 </Col>
                             </Row>
                         </Col>

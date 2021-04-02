@@ -1,3 +1,7 @@
 .app-text {
     color: white;
 }
+
+.elements-counter {
+    max-width: 4em;
+}
