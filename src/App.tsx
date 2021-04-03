@@ -1,6 +1,8 @@
 import React from 'react';
 import { Container, Row, Col, Button } from 'react-bootstrap';
-import ArrayVisualizer, { ProcessedValues, ArrayMetaData } from './components/ArrayVisualizer';
+import ArrayVisualizer from './components/ArrayVisualizer';
+import { ProcessedValues, HistoryObject } from './lib/interfaces';
+import { ArrayMetaData } from './lib/types';
 import './App.css';
 import BubbleSort, { BubbleSortState } from './sorters/BubbleSort';
 import { isNumeric } from './lib/helpers';
@@ -16,8 +18,10 @@ interface AppProps {
 }
 
 interface AppState {
+    history: HistoryObject[];
     maxItems: number;
     itemCount: number;
+    speed: number;
     maxHeight: number;
     intervalCall: NodeJS.Timeout | null;
     values: number[];
@@ -33,8 +37,10 @@ class App extends React.Component<AppProps, AppState> {
     constructor(props: AppProps) {
         super(props);
         this.state = {
+            history: [],
             maxItems: 0,
             itemCount: 0,
+            speed: 50,
             maxHeight: 0,
             intervalCall: null,
             values: [],
@@ -50,8 +56,11 @@ class App extends React.Component<AppProps, AppState> {
     componentDidMount() {
         let interval = setInterval(() => {
             this.calcTime();
-            this.nextSortState();
-        }, 20);
+            const ms = 1000 / ((this.state.speed / 100) * 50); // how many ms before next sort state
+            if(this.state.history.length === 0 || new Date().getTime() - this.state.history[this.state.history.length - 1].time >= ms) {
+                this.nextSortState();
+            }
+        }, 17);
         this.setState({
             ...this.state,
             intervalCall: interval
@@ -90,10 +99,25 @@ class App extends React.Component<AppProps, AppState> {
             if(result[1].isDone === true) {
                 this.setState({...this.state, applicationState: AlgorithmState.PAUSED});
             }
-            this.setState({...this.state, values: result[0], internalSortState: result[1], comparisonsCount: result[1].comparisons, swapCount: result[1].swaps});
+            let highlightMeta: ArrayMetaData<boolean> = {};
+            highlightMeta[`${result[1].index}`] = true;
+            highlightMeta[`${result[1].index + 1}`] = true;
+            this.setState({...this.state, values: result[0], internalSortState: result[1], comparisonsCount: result[1].comparisons, swapCount: result[1].swaps,
+                history: [
+                    ...this.state.history,
+                    {
+                        time: new Date().getTime(),
+                        state: { original: [...result[0]], scaled: [] },
+                        highlightMeta,
+                        comparisons: result[1].comparisons,
+                        swaps: result[1].swaps,
+                        timePassed: this.getTotalTime()
+                    }
+                ]});
         } else if(this.state.applicationState === AlgorithmState.RESET) {
             this.setState({
                 ...this.state,
+                history: [],
                 values: [...Array(this.state.itemCount)].map(() => Math.floor(Math.random() * 100 + 1)),
                 comparisonsCount: 0,
                 swapCount: 0,
@@ -147,6 +171,17 @@ class App extends React.Component<AppProps, AppState> {
         }
     }
 
+    handleSlider = (event: React.ChangeEvent<HTMLInputElement>): void => {
+        if(isNumeric(event.target.value)) {
+            this.setState({
+                ...this.state,
+                speed: parseInt(event.target.value)
+            });
+        } else {
+            event.preventDefault();
+        }
+    }
+
     render() {
         let key1 = `${this.state.internalSortState.index}`; // TODO: put metadata generation inside algorithm
         let key2 = `${this.state.internalSortState.index + 1}`;
@@ -189,6 +224,9 @@ class App extends React.Component<AppProps, AppState> {
                                 </Col>
                                 <Col>
                                     <input type="number" className="elements-counter" name="elements" step="5" value={this.state.itemCount} onChange={this.handleItemChange} />
+                                </Col>
+                                <Col>
+                                    <input type="range" min="1" max="100" value={this.state.speed} onChange={this.handleSlider} />
                                 </Col>
                             </Row>
                         </Col>

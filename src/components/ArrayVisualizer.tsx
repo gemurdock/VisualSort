@@ -1,12 +1,7 @@
 import { CSSProperties, useEffect, useState } from 'react';
 import './ArrayVisualizer.css';
-
-export interface ProcessedValues { // TODO: move the interfaces & types out of this file
-    original: number[],
-    scaled: number[]
-}
-
-export type ArrayMetaData<T> = { [key: string]: T };
+import { ProcessedValues } from '../lib/interfaces';
+import { ArrayMetaData } from '../lib/types';
 
 interface ViewSpecs {
     rectStartX: number;
