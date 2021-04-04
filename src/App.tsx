@@ -60,7 +60,7 @@ class App extends React.Component<AppProps, AppState> {
             if(this.state.history.length === 0 || new Date().getTime() - this.state.history[this.state.history.length - 1].time >= ms) {
                 this.nextSortState();
             }
-        }, 17);
+        }, 3);
         this.setState({
             ...this.state,
             intervalCall: interval
