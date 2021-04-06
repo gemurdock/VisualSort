@@ -5,12 +5,19 @@ import { ProcessedValues, HistoryObject } from './lib/interfaces';
 import { ArrayMetaData } from './lib/types';
 import './App.css';
 import BubbleSort, { BubbleSortState } from './sorters/BubbleSort';
-import { isNumeric } from './lib/helpers';
+import { isNumeric, shuffleArray } from './lib/helpers';
 
 enum AlgorithmState {
     PAUSED,
     RUNNING,
     RESET
+}
+
+enum RandomArrayType {
+    RANDOM,
+    NEARLY_SORTED,
+    FEW_UNIQUE,
+    REVERSED
 }
 
 interface AppProps {
@@ -22,6 +29,7 @@ interface AppState {
     maxItems: number;
     itemCount: number;
     speed: number;
+    arrayType: RandomArrayType;
     maxHeight: number;
     intervalCall: NodeJS.Timeout | null;
     values: number[];
@@ -41,6 +49,7 @@ class App extends React.Component<AppProps, AppState> {
             maxItems: 0,
             itemCount: 0,
             speed: 50,
+            arrayType: RandomArrayType.RANDOM,
             maxHeight: 0,
             intervalCall: null,
             values: [],
@@ -118,12 +127,48 @@ class App extends React.Component<AppProps, AppState> {
             this.setState({
                 ...this.state,
                 history: [],
-                values: [...Array(this.state.itemCount)].map(() => Math.floor(Math.random() * 100 + 1)),
+                values: this.getRandArray(),
                 comparisonsCount: 0,
                 swapCount: 0,
                 internalSortState: {index: 0, completedIndex: -1, isDone: false, comparisons: 0, swaps: 0},
                 applicationState: AlgorithmState.PAUSED
             });
+        }
+    }
+
+    getRandArray(): number[] {
+        if(this.state.arrayType === RandomArrayType.NEARLY_SORTED) {
+            let array = Array.from(Array(this.state.itemCount).keys()).map(v => v + 1);
+            let openIndices = Array.from(Array(this.state.itemCount).keys()); // indexes not choosen to be randomized yet
+            for(let i = 0; i < Math.ceil(array.length * 0.15); i++) {
+                let rand = Math.floor(Math.random() * openIndices.length);
+                let index = openIndices.splice(rand, 1)[0];
+                let index2 = openIndices[Math.floor(Math.random() * openIndices.length)];
+                let tmp = array[index];
+                array[index] = array[index2];
+                array[index2] = tmp;
+            }
+            return array;
+        } else if(this.state.arrayType === RandomArrayType.FEW_UNIQUE) {
+            let array = [];
+            let maxRepeat = Math.floor(this.state.itemCount / 5);
+            if(maxRepeat === 1) maxRepeat = 2;
+            let repeatValue = 1;
+            for(let i = 0; i < this.state.itemCount; i++) {
+                if((i + 1) / maxRepeat > repeatValue) {
+                    repeatValue += 1;
+                }
+                array.push(repeatValue);
+            }
+            return shuffleArray<number>(array);
+        } else if(this.state.arrayType === RandomArrayType.REVERSED) {
+            let array = [];
+            for(let i = this.state.itemCount; i > 0; i--) {
+                array.push(i);
+            }
+            return array;
+        } else { // RandomArrayType.RANDOM
+            return [...Array(this.state.itemCount)].map(() => Math.floor(Math.random() * 100 + 1));
         }
     }
 
@@ -139,8 +184,12 @@ class App extends React.Component<AppProps, AppState> {
             this.setState({
                 ...this.state,
                 maxItems: max,
-                itemCount: max,
-                values: [...Array(max)].map(() => Math.floor(Math.random() * 100 + 1))
+                itemCount: max
+            }, () => {
+                this.setState({
+                    ...this.state,
+                    values: this.getRandArray()
+                });
             });
         }
     }
@@ -176,6 +225,19 @@ class App extends React.Component<AppProps, AppState> {
             this.setState({
                 ...this.state,
                 speed: parseInt(event.target.value)
+            });
+        } else {
+            event.preventDefault();
+        }
+    }
+
+    handleDropDown = (event: React.ChangeEvent<HTMLSelectElement>): void => {
+        let parsedValue = parseInt(event.target.value);
+        if(parsedValue in RandomArrayType) {
+            this.setState({
+                ...this.state,
+                arrayType: parsedValue,
+                applicationState: AlgorithmState.RESET
             });
         } else {
             event.preventDefault();
@@ -227,6 +289,14 @@ class App extends React.Component<AppProps, AppState> {
                                 </Col>
                                 <Col>
                                     <input type="range" min="1" max="100" value={this.state.speed} onChange={this.handleSlider} />
+                                </Col>
+                                <Col>
+                                    <select onChange={this.handleDropDown} value={this.state.arrayType}>
+                                        <option value={RandomArrayType.RANDOM}>Random</option>
+                                        <option value={RandomArrayType.NEARLY_SORTED}>Nearly Sorted</option>
+                                        <option value={RandomArrayType.FEW_UNIQUE}>Few Unique</option>
+                                        <option value={RandomArrayType.REVERSED}>Reversed</option>
+                                    </select>
                                 </Col>
                             </Row>
                         </Col>
