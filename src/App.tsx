@@ -20,23 +20,27 @@ enum RandomArrayType {
     REVERSED
 }
 
+enum FrameControl {
+    BEGINING,
+    BACK,
+    FORWARD,
+    END
+}
+
 interface AppProps {
 
 }
 
 interface AppState {
     history: HistoryObject[];
+    historyIndex: number;
     maxItems: number;
     itemCount: number;
     speed: number;
     arrayType: RandomArrayType;
     maxHeight: number;
     intervalCall: NodeJS.Timeout | null;
-    values: number[];
-    comparisonsCount: number;
-    swapCount: number;
-    startTime: number | null;
-    totalTime: number;
+    lastSortPass: number;
     internalSortState: BubbleSortState;
     applicationState: AlgorithmState
 };
@@ -46,17 +50,14 @@ class App extends React.Component<AppProps, AppState> {
         super(props);
         this.state = {
             history: [],
+            historyIndex: -1,
             maxItems: 0,
             itemCount: 0,
             speed: 50,
             arrayType: RandomArrayType.RANDOM,
             maxHeight: 0,
             intervalCall: null,
-            values: [],
-            comparisonsCount: 0,
-            swapCount: 0,
-            startTime: null,
-            totalTime: 0,
+            lastSortPass: new Date().getTime(),
             applicationState: AlgorithmState.PAUSED,
             internalSortState: {index: 0, completedIndex: -1, isDone: false, comparisons: 0, swaps: 0}
         };
@@ -64,10 +65,13 @@ class App extends React.Component<AppProps, AppState> {
 
     componentDidMount() {
         let interval = setInterval(() => {
-            this.calcTime();
-            const ms = 1000 / ((this.state.speed / 100) * 50); // how many ms before next sort state
-            if(this.state.history.length === 0 || new Date().getTime() - this.state.history[this.state.history.length - 1].time >= ms) {
+            const ms = 1000 / ((this.state.speed / 100) * 50); // how many ms before next sort state; defined elsewhere
+            if(new Date().getTime() - this.state.lastSortPass >= ms) {
                 this.nextSortState();
+                this.setState({
+                    ...this.state,
+                    lastSortPass: new Date().getTime()
+                });
             }
         }, 3);
         this.setState({
@@ -82,58 +86,76 @@ class App extends React.Component<AppProps, AppState> {
         }
     }
 
-    calcTime() {
-        if(this.state.applicationState === AlgorithmState.RUNNING && this.state.startTime === null) {
-            this.setState({...this.state, startTime: new Date().getTime()});
-        } else if(this.state.applicationState === AlgorithmState.PAUSED && this.state.startTime !== null) {
-            let totalTime = this.state.totalTime + (new Date().getTime() - this.state.startTime);
-            this.setState({...this.state, startTime: null, totalTime});
-        } else if(this.state.applicationState === AlgorithmState.RESET) {
-            this.setState({...this.state, startTime: null, totalTime: 0});
-        }
-    }
-
     getTotalTime(): string {
-        let totalTime = this.state.totalTime;
-        if(this.state.startTime !== null) {
-            totalTime += new Date().getTime() - this.state.startTime;
+        if(this.state.history.length === 0) {
+            return '0s';
         }
-        totalTime = Math.floor(totalTime / 1000);
-        return `${totalTime}s`;
+        const period = this.state.history[this.state.historyIndex].time;
+        const seconds = Math.floor(period / 1000);
+        return `${seconds}s`;
     }
 
     nextSortState() {
-        if(this.state.applicationState === AlgorithmState.RUNNING) {
-            let result = BubbleSort(this.state.values, this.state.internalSortState);
+        if(this.state.applicationState === AlgorithmState.RUNNING && this.state.historyIndex < this.state.history.length - 1) {
+            this.setState({
+                ...this.state,
+                historyIndex: this.state.historyIndex + 1
+            });
+        } else if(this.state.applicationState === AlgorithmState.RUNNING) {
+            let result = BubbleSort(this.getHistoryState().original, this.state.internalSortState);
             if(result[1].isDone === true) {
                 this.setState({...this.state, applicationState: AlgorithmState.PAUSED});
             }
             let highlightMeta: ArrayMetaData<boolean> = {};
             highlightMeta[`${result[1].index}`] = true;
             highlightMeta[`${result[1].index + 1}`] = true;
-            this.setState({...this.state, values: result[0], internalSortState: result[1], comparisonsCount: result[1].comparisons, swapCount: result[1].swaps,
-                history: [
-                    ...this.state.history,
-                    {
-                        time: new Date().getTime(),
-                        state: { original: [...result[0]], scaled: [] },
-                        highlightMeta,
-                        comparisons: result[1].comparisons,
-                        swaps: result[1].swaps,
-                        timePassed: this.getTotalTime()
-                    }
-                ]});
+            this.setHistoryState({original: [...result[0]], scaled: []}, highlightMeta, result[1].comparisons, result[1].swaps);
+            this.setState({
+                ...this.state,
+                internalSortState: result[1]
+            });
         } else if(this.state.applicationState === AlgorithmState.RESET) {
             this.setState({
                 ...this.state,
                 history: [],
-                values: this.getRandArray(),
-                comparisonsCount: 0,
-                swapCount: 0,
-                internalSortState: {index: 0, completedIndex: -1, isDone: false, comparisons: 0, swaps: 0},
+                historyIndex: -1,
+                internalSortState: {index: 0, completedIndex: 0, isDone: false, comparisons: 0, swaps: 0},
                 applicationState: AlgorithmState.PAUSED
+            }, () => {
+                this.setHistoryState({original: this.getRandArray(), scaled: []}, {}, 0, 0);
             });
         }
+    }
+
+    getHistoryState(): ProcessedValues {
+        let state: ProcessedValues  = { original: [], scaled: [] };
+        if(this.state.history.length > 0) {
+            state.original = [...this.state.history[this.state.historyIndex].state.original];
+        }
+        return state;
+    }
+
+    setHistoryState(state: ProcessedValues, highlightMeta: ArrayMetaData<boolean>, comparisons: number, swaps: number): void {
+        let time = 0;
+        if(this.state.history.length > 0) {
+            const ms = 1000 / ((this.state.speed / 100) * 50); // defined elsewhere
+            time = this.state.history[this.state.history.length - 1].time + ms;
+        }
+        let obj = {
+            time,
+            state,
+            highlightMeta,
+            comparisons,
+            swaps
+        };
+        this.setState({
+            ...this.state,
+            history: [
+                ...this.state.history,
+                obj
+            ],
+            historyIndex: this.state.historyIndex + 1
+        });
     }
 
     getRandArray(): number[] {
@@ -186,10 +208,7 @@ class App extends React.Component<AppProps, AppState> {
                 maxItems: max,
                 itemCount: max
             }, () => {
-                this.setState({
-                    ...this.state,
-                    values: this.getRandArray()
-                });
+                this.setHistoryState({original: this.getRandArray(), scaled: []}, {}, 0, 0);
             });
         }
     }
@@ -244,22 +263,46 @@ class App extends React.Component<AppProps, AppState> {
         }
     }
 
+    handleHistoryIndexChange = (control: FrameControl) => {
+        let nextValue = this.state.historyIndex;
+        if(control === FrameControl.BEGINING) {
+            nextValue = 0;
+        } else if(control === FrameControl.BACK) {
+            nextValue -= 1;
+            if(nextValue < 0) {
+                nextValue = 0;
+            }
+        } else if(control === FrameControl.FORWARD) {
+            nextValue += 1;
+            if(nextValue > this.state.history.length - 1) {
+                nextValue = this.state.history.length - 1;
+            }
+        } else if(control === FrameControl.END) {
+            nextValue = this.state.history.length - 1;
+        }
+        this.setState({
+            ...this.state,
+            historyIndex: nextValue
+        });
+    }
+
     render() {
-        let key1 = `${this.state.internalSortState.index}`; // TODO: put metadata generation inside algorithm
-        let key2 = `${this.state.internalSortState.index + 1}`;
         let highlightMeta: ArrayMetaData<Boolean> = {};
-        highlightMeta[key1] = true;
-        highlightMeta[key2] = true;
+        if(this.state.history.length > 0 && this.state.historyIndex >= 0) {
+            highlightMeta = {
+                ...this.state.history[this.state.historyIndex].highlightMeta
+            };
+        }
 
         return (
             <div className="App">
                 <Container>
                     <Row className="text-center m-3">
                         <Col>
-                            <span className="app-text">Comparisons: {this.state.comparisonsCount}</span>
+                            <span className="app-text">Comparisons: {this.state.history.length > 0 ? this.state.history[this.state.historyIndex].comparisons : 0}</span>
                         </Col>
                         <Col>
-                            <span className="app-text">Swaps: {this.state.swapCount}</span>
+                            <span className="app-text">Swaps: {this.state.history.length > 0 ? this.state.history[this.state.historyIndex].swaps : 0}</span>
                         </Col>
                         <Col>
                             <span className="app-text">Time: {this.getTotalTime()}</span>
@@ -267,7 +310,7 @@ class App extends React.Component<AppProps, AppState> {
                     </Row>
                     <Row className="text-center m-3">
                         <Col>
-                            <ArrayVisualizer list={ { original: this.state.values, scaled: [] } }
+                            <ArrayVisualizer list={this.getHistoryState()}
                                 width={1000} height={600} highlightMeta={highlightMeta} focusMeta={{}}
                                 handleMaxItems={this.handleMaxItems} handleMaxValue={this.handleMaxValue} />
                         </Col>
@@ -297,6 +340,20 @@ class App extends React.Component<AppProps, AppState> {
                                         <option value={RandomArrayType.FEW_UNIQUE}>Few Unique</option>
                                         <option value={RandomArrayType.REVERSED}>Reversed</option>
                                     </select>
+                                </Col>
+                            </Row>
+                            <Row>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BEGINING)}>GOTO Start</Button>
+                                </Col>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BACK)}>Backwards</Button>
+                                </Col>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.FORWARD)}>Forward</Button>
+                                </Col>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.END)}>GOTO End</Button>
                                 </Col>
                             </Row>
                         </Col>

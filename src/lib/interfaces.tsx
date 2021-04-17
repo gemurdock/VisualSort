@@ -10,10 +10,9 @@ export interface ProcessedValues {
 }
 
 export interface HistoryObject {
-    time: number;
+    time: number; // in ms, starts at 0
     state: ProcessedValues;
     highlightMeta: ArrayMetaData<boolean>;
     comparisons: number;
     swaps: number;
-    timePassed: string; // string in seconds
 }
