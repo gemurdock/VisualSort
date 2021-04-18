@@ -342,18 +342,24 @@ class App extends React.Component<AppProps, AppState> {
                                     </select>
                                 </Col>
                             </Row>
-                            <Row>
+                            <Row className="mt-4">
                                 <Col>
-                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BEGINING)}>GOTO Start</Button>
+                                    <Row>
+                                        <Col>
+                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BEGINING)}>Start</Button>
+                                        </Col>
+                                        <Col>
+                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BACK)}>Back</Button>
+                                        </Col>
+                                        <Col>
+                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.FORWARD)}>Forward</Button>
+                                        </Col>
+                                        <Col>
+                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.END)}>End</Button>
+                                        </Col>
+                                    </Row>
                                 </Col>
                                 <Col>
-                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BACK)}>Backwards</Button>
-                                </Col>
-                                <Col>
-                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.FORWARD)}>Forward</Button>
-                                </Col>
-                                <Col>
-                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.END)}>GOTO End</Button>
                                 </Col>
                             </Row>
                         </Col>
