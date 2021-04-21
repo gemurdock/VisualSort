@@ -8,6 +8,8 @@ export interface BubbleSortState {
     index: number;
     completedIndex: number;
     isDone: boolean;
+    comparisons: number;
+    swaps: number;
 }
 
 function BubbleSort(input: number[], state: BubbleSortState): [number[], BubbleSortState] {
@@ -18,7 +20,9 @@ function BubbleSort(input: number[], state: BubbleSortState): [number[], BubbleS
         nextState = {
             index: 0,
             completedIndex: nextInput.length,
-            isDone: false
+            isDone: false,
+            comparisons: 0,
+            swaps: 0
         };
     } else {
         nextState = {...state};
@@ -32,9 +36,11 @@ function BubbleSort(input: number[], state: BubbleSortState): [number[], BubbleS
         let tmp = nextInput[nextState.index];
         nextInput[nextState.index] = nextInput[nextState.index + 1];
         nextInput[nextState.index + 1] = tmp;
+        nextState.swaps += 1;
     }
 
     nextState.index += 1;
+    nextState.comparisons += 1;
     if(nextState.index > nextInput.length - 2 || nextState.index >= nextState.completedIndex) { // '-2' since -1 since index starts at 0 && index should not go to last element
         nextState.index = 0;
         nextState.completedIndex -= 1;

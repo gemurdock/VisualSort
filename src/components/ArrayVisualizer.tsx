@@ -1,10 +1,7 @@
 import { CSSProperties, useEffect, useState } from 'react';
 import './ArrayVisualizer.css';
-
-export interface ProcessedValues {
-    original: number[],
-    scaled: number[]
-}
+import { ProcessedValues } from '../lib/interfaces';
+import { ArrayMetaData } from '../lib/types';
 
 interface ViewSpecs {
     rectStartX: number;
@@ -12,6 +9,16 @@ interface ViewSpecs {
     rectPad: number;
     maxRectHeight: number;
     maxItems: number; // 119 @ 1200 width
+}
+
+interface ArrayVisualizerProps {
+    width: number,
+    height: number,
+    list: ProcessedValues,
+    highlightMeta: ArrayMetaData<Boolean>,
+    focusMeta: ArrayMetaData<Boolean>,
+    handleMaxItems: (max: number) => void,
+    handleMaxValue: (max: number) => void
 }
 
 const VIEWBOX_WIDTH = 1200;
@@ -38,11 +45,19 @@ function calcView(length: number): ViewSpecs {
     }
 }
 
-function buildSVGRects(items: ProcessedValues, viewSpecs: ViewSpecs): JSX.Element[] {
+function getIndexStyle(index: number, highlightMeta: ArrayMetaData<Boolean>, focusMeta: ArrayMetaData<Boolean>, rectWidth: number): CSSProperties {
     let defaultRectStyle: CSSProperties = {
         fill: 'rgb(66, 135, 245)',
-        width: `${viewSpecs.rectWidth}px`
+        width: `${rectWidth}px`
     };
+    let highlightedRectStyle: CSSProperties = {
+        fill: 'rgb(219, 132, 39)',
+        width: `${rectWidth}`
+    }
+    return Object.keys(highlightMeta).includes(`${index}`) ? highlightedRectStyle : defaultRectStyle;
+}
+
+function buildSVGRects(items: ProcessedValues, viewSpecs: ViewSpecs, highlightMeta: ArrayMetaData<Boolean>, focusMeta: ArrayMetaData<Boolean>): JSX.Element[] {
     if(items.scaled.length !== items.original.length) {
         const min = Math.min(...items.original);
         const max = Math.max(...items.original);
@@ -60,13 +75,12 @@ function buildSVGRects(items: ProcessedValues, viewSpecs: ViewSpecs): JSX.Elemen
         return (
             <rect key={`${index}`}
                 x={viewSpecs.rectPad / 2 + (viewSpecs.rectPad + viewSpecs.rectWidth) * index}
-                y={VIEWBOX_HEIGHT - item} height={item} style={defaultRectStyle} />
+                y={VIEWBOX_HEIGHT - item} height={item} style={getIndexStyle(index, highlightMeta, focusMeta, viewSpecs.rectWidth)} />
         )
     });
 }
 
-function ArrayVisualizer(props: { width: number, height: number, list: ProcessedValues, handleMaxItems: (max: number) => void,
-        handleMaxValue: (max: number) => void }) {
+function ArrayVisualizer(props: ArrayVisualizerProps) {
     const [viewSpecs, setViewSpecs] = useState<ViewSpecs>(calcView(props.list.original.length));
 
     useEffect(() => {
@@ -78,10 +92,10 @@ function ArrayVisualizer(props: { width: number, height: number, list: Processed
         props.handleMaxValue(viewSpecs.maxRectHeight);
     }, [viewSpecs]);
 
-    let rects = buildSVGRects(props.list, viewSpecs);
+    let rects = buildSVGRects(props.list, viewSpecs, props.highlightMeta, props.focusMeta);
 
     return (
-        <div className="visualizer-container">
+        <div>
             <svg className=".svg-view" viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} width={`${props.width}`} height={`${props.height}`}>
                 { rects }
                 Warning: Your browser does not support SVG.
