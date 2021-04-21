@@ -308,14 +308,36 @@ class App extends React.Component<AppProps, AppState> {
                             <span className="app-text">Time: {this.getTotalTime()}</span>
                         </Col>
                     </Row>
-                    <Row className="text-center m-3">
+                    <Row className="text-center">
                         <Col>
                             <ArrayVisualizer list={this.getHistoryState()}
                                 width={1000} height={600} highlightMeta={highlightMeta} focusMeta={{}}
                                 handleMaxItems={this.handleMaxItems} handleMaxValue={this.handleMaxValue} />
                         </Col>
                     </Row>
-                    <Row className="text-center m-3">
+                    <Row>
+                        <Col>
+                        </Col>
+                        <Col>
+                            <Row>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BEGINING)}>&#60;&#60;</Button>
+                                </Col>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BACK)}>&#60;</Button>
+                                </Col>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.FORWARD)}>&#62;</Button>
+                                </Col>
+                                <Col>
+                                    <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.END)}>&#62;&#62;</Button>
+                                </Col>
+                            </Row>
+                        </Col>
+                        <Col>
+                        </Col>
+                    </Row>
+                    <Row className="text-center mt-3">
                         <Col>
                             <Row>
                                 <Col>
@@ -340,26 +362,6 @@ class App extends React.Component<AppProps, AppState> {
                                         <option value={RandomArrayType.FEW_UNIQUE}>Few Unique</option>
                                         <option value={RandomArrayType.REVERSED}>Reversed</option>
                                     </select>
-                                </Col>
-                            </Row>
-                            <Row className="mt-4">
-                                <Col>
-                                    <Row>
-                                        <Col>
-                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BEGINING)}>&#60;&#60;</Button>
-                                        </Col>
-                                        <Col>
-                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BACK)}>&#60;</Button>
-                                        </Col>
-                                        <Col>
-                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.FORWARD)}>&#62;</Button>
-                                        </Col>
-                                        <Col>
-                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.END)}>&#62;&#62;</Button>
-                                        </Col>
-                                    </Row>
-                                </Col>
-                                <Col>
                                 </Col>
                             </Row>
                         </Col>
