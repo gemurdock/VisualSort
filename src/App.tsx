@@ -346,16 +346,16 @@ class App extends React.Component<AppProps, AppState> {
                                 <Col>
                                     <Row>
                                         <Col>
-                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BEGINING)}>Start</Button>
+                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BEGINING)}>&#60;&#60;</Button>
                                         </Col>
                                         <Col>
-                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BACK)}>Back</Button>
+                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.BACK)}>&#60;</Button>
                                         </Col>
                                         <Col>
-                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.FORWARD)}>Forward</Button>
+                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.FORWARD)}>&#62;</Button>
                                         </Col>
                                         <Col>
-                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.END)}>End</Button>
+                                            <Button variant="secondary" onClick={() => this.handleHistoryIndexChange(FrameControl.END)}>&#62;&#62;</Button>
                                         </Col>
                                     </Row>
                                 </Col>
